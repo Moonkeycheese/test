@@ -3,8 +3,9 @@
 Keeps the 3 original presets and adds the PATTERNS below. New patterns live in
 one embedded coll (---monty) on the device's swung 64th-note path, 2 bars each.
 
-Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'x' = hit, '>' = hit dragged
-one 64th late. Odd 16ths get one 64th of swing (~62%), like the original preset 2.
+Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'X' accent, 'x' hit,
+'g' ghost; '>' hit and 'd' ghost are dragged one 64th late (see VELOCITY).
+Odd 16ths get one 64th of swing (~62%), like the original preset 2.
 
 "Random" / the Rnd button picks one of RANDOM_SLOTS combos pre-rolled at build
 time: kick, snare, hat and perc lanes each taken from a random pattern, plus a
@@ -16,62 +17,67 @@ import json, random, struct, sys
 
 PATTERNS = [
     ("2-Step", {
-        "kick":   "x.........x.....|x.........x..x..",
-        "snare1": "....x.......x...|....x.......x...",
+        "kick":   "X.........x.....|X.........x..g..",
+        "snare1": "....X.......X...|....X.......X...",
         "hat3":   "..x...x...x...x.|..x...x...x...x.",
-        "tamb":   ".x.x.x.x.x.x.x.x|.x.x.x.x.x.x.x.x",
-        "clap":   "...........x....|.......x......x.",
+        "tamb":   ".g.x.g.x.g.x.g.x|.g.x.g.x.g.x.g.x",
+        "clap":   "...........g....|.......g......x.",
     }),
     ("Speed 4x4", {
-        "kick":   "x...x...x...x...|x...x...x...x...",
-        "snare2": "....x.......x...|....x.......x...",
+        "kick":   "X...x...x...x...|X...x...x...x...",
+        "snare2": "....X.......X...|....X.......X...",
         "hat3":   "..x...x...x...x.|..x...x...x...x.",
-        "hat2":   "...x...x...x...x|...x...x...x...x",
-        "tamb":   ".x...x...x...x..|.x...x...x...x.x",
+        "hat2":   "...g...g...g...g|...g...g...g...g",
+        "tamb":   ".g...g...g...g..|.g...g...g...x.x",
     }),
     ("Skippy", {
-        "kick":   "x......x..x.....|x.....x...x..x..",
-        "snare1": "....x.......x...|....x.......x...",
-        "snare3": "...............x|.........x......",
+        "kick":   "X......x..x.....|X.....x...x..g..",
+        "snare1": "....X.......X...|....X.......X...",
+        "snare3": "...............g|.........g......",
         "hat1":   "..x...x...x...x.|..x...x...x...x.",
-        "hat2":   ".x.x.x.x.x.x.x.x|.x.x.x.x.x.x.x.x",
+        "hat2":   ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g.g",
     }),
     ("Rim Ride", {
-        "kick":   "x.........x.....|x..x......x.....",
-        "snare1": "....x.......x...|....x.......x...",
-        "clap":   "...x..x....x..x.|...x..x....x...x",
-        "ride":   "x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.",
-        "hat2":   "...x...x...x...x|...x...x...x...x",
+        "kick":   "X.........x.....|X..g......x.....",
+        "snare1": "....X.......X...|....X.......X...",
+        "clap":   "...x..g....x..g.|...x..g....x...x",
+        "ride":   "x.g.x.g.x.g.x.g.|x.g.x.g.x.g.x.g.",
+        "hat2":   "...g...g...g...g|...g...g...g...g",
     }),
     ("Broken Fill", {
-        "kick":   "x.....x...x.....|x.....x..x......",
-        "snare1": "....x.......x...|....x.......x.xx",
-        "clap":   "...........x....|.......x...x....",
+        "kick":   "X.....x...x.....|X.....x..x......",
+        "snare1": "....X.......X...|....X.......Xgxx",
+        "clap":   "...........g....|.......g...g....",
         "hat3":   "..x...x.......x.|..x...x...x.....",
-        "hat1":   ".x.x.x.x.x.x.x.x|.x.x.x.x.x.x.x..",
+        "hat1":   ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g..",
     }),
     ("Future Shuffle", {
-        "kick":   "x........x......|x.......x.x.....",
+        "kick":   "X........x......|X.......x.g.....",
         "snare1": "....>.......>...|....>.......>...",
-        "clap":   ".......x......x.|...x.......x....",
-        "hat2":   ".x.x..x.x.x..x.x|.x.x..x.x.x..x.x",
-        "tamb":   "x...x...x...x...|x...x...x...x...",
+        "snare3": "......g......g..|..........g....g",
+        "clap":   ".......x......g.|...g.......x....",
+        "hat2":   ".g.x..g.x.g..x.g|.g.x..g.x.g..x.g",
+        "tamb":   "g...x...g...x...|g...x...g...x...",
     }),
     ("Future Half", {
-        "kick":   "x.........x.....|x.....x......x..",
+        "kick":   "X.........x.....|X.....x......g..",
         "snare1": "........>.......|........>.......",
         "snare2": "........x.......|........x.......",
+        "snare3": "...........d....|...d.......d....",
         "hat3":   "......x.......x.|......x.......x.",
-        "tamb":   ".x.x.x.x.x.x.x.x|.x.x.x.x.x.x.x.x",
+        "tamb":   ".g.g.x.g.g.g.x.g|.g.g.x.g.g.g.x.g",
     }),
     ("Future Roll", {
-        "kick":   "x.........x.....|x.......x.x.....",
-        "snare1": "....x.......x...|....x.......x...",
-        "snare3": ".......>.......>|...........>...>",
-        "clap":   "..x.....x.x...x.|..x.....x.x..x..",
-        "hat1":   "x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.",
+        "kick":   "X.........x.....|X.......x.x.....",
+        "snare1": "....X.......X...|....X.......X...",
+        "snare3": ".......d.......d|...........d...d",
+        "clap":   "..g.....x.g...x.|..g.....x.g..x..",
+        "hat1":   "x.g.x.g.x.g.x.g.|x.g.x.g.x.g.x.g.",
     }),
 ]
+# Grid char -> velocity. '>' and 'd' are also dragged one 64th late.
+VELOCITY = {"X": 120, "x": 100, ">": 100, "g": 55, "d": 55}
+HUMANIZE = 6  # +/- random velocity per hit, fixed at build time
 ORIGINAL_NAMES = ["Orig 1", "Orig 2 Swing", "Orig 3"]
 # Order of the 11 instrument toggles in the preset "active" message lists.
 INSTRUMENTS = ["kick", "clap", "hat1", "ride", "hat3", "hat4", "hat2", "tamb", "snare1", "snare2", "snare3"]
@@ -92,15 +98,15 @@ def random_combos(n, seed=7):
         for _ in range(2):
             inst = rng.choice([i for i in grid if i in GROUPS[2] + GROUPS[3]])
             row, s = list(grid[inst]), rng.randrange(1, 32)
-            if row[s] != ">":
-                row[s] = "x" if row[s] == "." else "."
+            if row[s] in ".xg":
+                row[s] = "g" if row[s] == "." else "."
             grid[inst] = "".join(row)
         combos.append(("random", grid))
     return combos
 
 
 def to_coll(patterns):
-    hits = {}
+    rng, hits = random.Random(1), {}
     for v, (_, grid) in enumerate(patterns):
         for inst, row in grid.items():
             row = row.replace("|", "")
@@ -108,9 +114,9 @@ def to_coll(patterns):
             for step, c in enumerate(row):
                 if c == ".":
                     continue
-                assert c in "x>", c
-                pos = step * 4 + step % 2 + (c == ">")
-                hits.setdefault(v * STEPS + pos, []).append(inst)
+                vel = min(127, VELOCITY[c] + rng.randint(-HUMANIZE, HUMANIZE))
+                pos = step * 4 + step % 2 + (c in ">d")
+                hits.setdefault(v * STEPS + pos, []).extend([inst, vel])
     return {"count": len(hits), "data": [{"key": k, "value": hits[k]} for k in sorted(hits)]}
 
 
@@ -196,7 +202,7 @@ def build(src):
         coll_data=to_coll(PATTERNS + random_combos(RANDOM_SLOTS)), saved_object_attributes={"embed": 1, "precision": 6})
     P["boxes"].append({"box": {"id": "obj-307", "maxclass": "comment", "numinlets": 1, "numoutlets": 0,
                                "patching_rect": [176.0, 795.0, 420.0, 18.0],
-                               "text": "---monty key = (preset - 3) * 128 + 64th step. Edit patterns in make_monty.py"}})
+                               "text": "---monty key = (preset - 3) * 128 + 64th step, value = name velocity pairs. Edit patterns in make_monty.py"}})
     # "Random" menu item / Rnd button: preset = first random slot + random offset.
     first_rnd = len(ORIGINAL_NAMES) + len(PATTERNS)
     obj("obj-310", "sel %d" % first_rnd, [130.0, 23.0, 40.0, 20.0], 2, 2, "bang")
@@ -263,6 +269,18 @@ def build(src):
                                     "text": active_flags(grid)}})
         sp["lines"].append({"patchline": {"source": ["obj-2", 3 + v], "destination": [mid, 0]}})
         sp["lines"].append({"patchline": {"source": [mid, 0], "destination": ["obj-24", 0]}})
+
+    # Per-hit velocity: coll values become "name vel name vel ..."; originals keep 100.
+    for c in ("obj-3", "obj-42", "obj-45"):
+        for e in B[c]["coll_data"]["data"]:
+            if e["value"] != [0]:
+                e["value"] = [x for name in e["value"] for x in (name, 100)]
+    B["obj-9"].update(text="zl iter 2", numinlets=2, numoutlets=2, outlettype=["", ""])
+    obj("obj-320", "unpack s 0", [140.0, 530.0, 60.0, 20.0], 1, 2)
+    P["lines"] = [l for l in P["lines"] if l["patchline"]["source"][0] != "obj-9"]
+    wire("obj-9", 0, "obj-320", 0)
+    wire("obj-320", 0, "obj-32", 0)
+    wire("obj-320", 1, "obj-30", 1)  # dict.pack velocity (cold), set before the pitch fires
 
     check_lines(P)
     files[0]["data"] = json.dumps(patch, indent="\t").encode() + b"\n\0"
