@@ -7,8 +7,8 @@ Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'X' accent, 'x' hit,
 'g' ghost; '>' hit and 'd' ghost are dragged one 64th late (see VELOCITY).
 Odd 16ths get one 64th of swing (~62%), like the original preset 2.
 
-"Random" / the Rnd button picks one of RANDOM_SLOTS combos pre-rolled at build
-time: kick, snare, hat and perc lanes each taken from a random pattern, plus a
+With "Random" selected (or after Rnd), each Go press picks one of RANDOM_SLOTS
+combos pre-rolled at build time: kick, snare, hat and perc lanes each taken from a random pattern, plus a
 couple of hat/perc mutations.
 
 usage: python3 make_monty.py [src.amxd] [out.amxd]
@@ -203,34 +203,45 @@ def build(src):
     P["boxes"].append({"box": {"id": "obj-307", "maxclass": "comment", "numinlets": 1, "numoutlets": 0,
                                "patching_rect": [176.0, 795.0, 420.0, 18.0],
                                "text": "---monty key = (preset - 3) * 128 + 64th step, value = name velocity pairs. Edit patterns in make_monty.py"}})
-    # "Random" menu item / Rnd button: preset = first random slot + random offset.
+    # Random: preset >= first_rnd opens a gate so every Go press first picks a new random slot.
+    # Rnd button = select "Random" and press Go.
     first_rnd = len(ORIGINAL_NAMES) + len(PATTERNS)
-    obj("obj-310", "sel %d" % first_rnd, [130.0, 23.0, 40.0, 20.0], 2, 2, "bang")
-    obj("obj-311", "random %d" % RANDOM_SLOTS, [175.0, 23.0, 64.0, 20.0], 2, 1, "int")
-    obj("obj-312", "+ %d" % first_rnd, [245.0, 23.0, 32.0, 20.0], 2, 1, "int")
+    obj("obj-330", "t b b", [16.0, 125.0, 34.0, 20.0], 1, 2, "bang")
+    obj("obj-331", "gate 1", [60.0, 150.0, 40.0, 20.0], 2, 1)
+    obj("obj-332", ">= %d" % first_rnd, [180.0, 475.0, 40.0, 20.0], 2, 1, "int")
+    obj("obj-311", "random %d" % RANDOM_SLOTS, [60.0, 175.0, 64.0, 20.0], 2, 1, "int")
+    obj("obj-312", "+ %d" % first_rnd, [60.0, 200.0, 32.0, 20.0], 2, 1, "int")
     obj("obj-314", "t b b", [470.0, 34.0, 34.0, 20.0], 1, 2, "bang")
-    P["boxes"].append({"box": {"id": "obj-315", "maxclass": "message", "numinlets": 2, "numoutlets": 1,
-                               "outlettype": [""], "patching_rect": [520.0, 34.0, 40.0, 20.0],
-                               "text": "set %d" % first_rnd}})
+    for mid, text, x in (("obj-315", "set %d" % first_rnd, 520.0), ("obj-316", str(first_rnd), 470.0)):
+        P["boxes"].append({"box": {"id": mid, "maxclass": "message", "numinlets": 2, "numoutlets": 1,
+                                   "outlettype": [""], "patching_rect": [x, 60.0 if mid == "obj-316" else 34.0, 40.0, 20.0],
+                                   "text": text}})
     rnd = json.loads(json.dumps(B["obj-88"]))
     rnd.update(id="obj-313", text="Rnd", varname="Rnd", patching_rect=[470.0, 8.0, 40.0, 20.0])
-    rnd["presentation_rect"] = [151.0] + rnd["presentation_rect"][1:]
+    # Above Go: Live's Generate panel crops everything right of Go.
+    rnd["presentation_rect"] = [rnd["presentation_rect"][0], 103.0, rnd["presentation_rect"][2], 16.0]
     rnd["saved_attribute_attributes"]["valueof"].update(parameter_longname="Rnd", parameter_shortname="Rnd")
     P["boxes"].append({"box": rnd})
     P["parameters"]["obj-313"] = ["Rnd", "Rnd", 0]
-    P["lines"] = [l for l in P["lines"] if l["patchline"]["source"][0] != "obj-14"]
-    wire("obj-14", 0, "obj-310", 0)
-    wire("obj-310", 0, "obj-311", 0)
-    wire("obj-310", 1, "obj-49", 0)
+    # Go now goes through the re-roll; toggle edits (qlim) skip Go so they keep the current groove.
+    P["lines"] = [l for l in P["lines"] if l["patchline"]["source"] != ["obj-88", 0] and l["patchline"]["source"] != ["obj-40", 0]]
+    wire("obj-40", 0, "obj-2", 0)
+    wire("obj-88", 0, "obj-330", 0)
+    wire("obj-330", 1, "obj-331", 1)
+    wire("obj-330", 0, "obj-2", 0)
+    wire("obj-332", 0, "obj-331", 0)
+    wire("obj-331", 0, "obj-311", 0)
     wire("obj-311", 0, "obj-312", 0)
-    wire("obj-312", 0, "obj-49", 0)
+    wire("obj-312", 0, "obj-63", 0)
     wire("obj-313", 0, "obj-314", 0)
     wire("obj-314", 1, "obj-315", 0)
-    wire("obj-314", 0, "obj-311", 0)
+    wire("obj-314", 0, "obj-316", 0)
     wire("obj-315", 0, "obj-14", 0)
+    wire("obj-316", 0, "obj-49", 0)
     P["lines"] = [l for l in P["lines"] if l["patchline"]["source"][0] != "obj-20"]
     wire("obj-20", 0, "obj-303", 0, 1)
     wire("obj-20", 0, "obj-304", 0, 0)
+    wire("obj-20", 0, "obj-332", 0, 2)
     wire("obj-303", 0, "obj-41", 0, 0)
     wire("obj-303", 0, "obj-47", 0, 1)
     wire("obj-304", 0, "obj-305", 0)
