@@ -348,7 +348,6 @@ def build(src):
 
     # Swing box (in the empty grid cell under Snare3): 0 = straight, notes on the grid. Turning it up pushes
     # odd 16ths late by swing * 0.00125 beats: 50 = one 64th (MPC 62.5%), 100 = an 8th-triplet-plus (MPC 75%).
-    # Live's Auto Apply re-runs the tool when it changes.
     P["boxes"].append({"box": {
         "id": "obj-350", "maxclass": "live.numbox", "numinlets": 1, "numoutlets": 2, "outlettype": ["", "float"],
         "parameter_enable": 1, "patching_rect": [600.0, 600.0, 60.0, 15.0], "fontsize": 9.0,
@@ -362,7 +361,12 @@ def build(src):
     obj("obj-351", "expr $f1*0.00125", [600.0, 625.0, 120.0, 20.0], 1, 1)
     B["obj-55"].update(text="expr $i1*0.25 + ($i1%2)*$f2", outlettype=[""])
     B["obj-56"].update(text="expr $i1*0.0625 + (($i1/4)%2)*$f2", outlettype=[""])
-    wire("obj-350", 0, "obj-351", 0)
+    # Turning Swing re-runs the tool at once: [t b f] sets the swing first, then bangs live.miditool.in through
+    # the toggles' throttle (qlim 50), the same way the instrument buttons regenerate. No Random re-roll.
+    obj("obj-352", "t b f", [600.0, 610.0, 40.0, 20.0], 1, 2)
+    wire("obj-350", 0, "obj-352", 0)
+    wire("obj-352", 1, "obj-351", 0)
+    wire("obj-352", 0, "obj-40", 0)
     wire("obj-351", 0, "obj-55", 1)
     wire("obj-351", 0, "obj-56", 1)
 
