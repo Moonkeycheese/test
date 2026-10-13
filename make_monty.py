@@ -7,8 +7,8 @@ PATTERNS below live in one embedded coll (---monty) on the 64th-note path,
 
 Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'X' accent, 'x' hit,
 'g' ghost; 'L' accent, '>' hit and 'd' ghost are dragged one 64th late.
-Every coll value is "name velocity" pairs. Notes are written straight on the
-grid: swing comes from the clip's Groove in Live, so it's heard, not drawn.
+Every coll value is "name velocity" pairs. Notes are written on the grid; the
+Swing box (50 = straight) pushes the offbeat 16ths late when turned up.
 
 With "Random" selected (or after Rnd), each Go press picks one of RANDOM_SLOTS
 combos built at build time: a pattern's kick and snares stay together as its
@@ -345,6 +345,25 @@ def build(src):
     data.sort(key=lambda e: e["key"])
     assert len({e["key"] for e in data}) == len(data)
     B["obj-42"]["coll_data"] = {"count": len(data), "data": data}
+
+    # Swing box (in the empty grid cell under Snare3): 50 = straight, notes on the grid. Turning it up pushes
+    # odd 16ths late by (swing * 0.005 - 0.25) beats (62.5 = one 64th); Live's Auto Apply re-runs the tool.
+    P["boxes"].append({"box": {
+        "id": "obj-350", "maxclass": "live.numbox", "numinlets": 1, "numoutlets": 2, "outlettype": ["", "float"],
+        "parameter_enable": 1, "patching_rect": [600.0, 600.0, 60.0, 15.0], "fontsize": 9.0,
+        "presentation": 1, "presentation_rect": [77.0, 86.5, 72.0, 15.0], "varname": "Swing",
+        "saved_attribute_attributes": {"valueof": {
+            "parameter_longname": "Swing", "parameter_shortname": "Swing", "parameter_type": 1,
+            "parameter_mmin": 50, "parameter_mmax": 75, "parameter_initial": [50], "parameter_initial_enable": 1,
+            "parameter_unitstyle": 9, "parameter_units": "Swing %d",
+            "parameter_info": "Swing for the offbeat 16ths: 50 = straight on the grid, 58-66 = garage shuffle"}}}})
+    P["parameters"]["obj-350"] = ["Swing", "Swing", 0]
+    obj("obj-351", "expr $f1*0.005 - 0.25", [600.0, 625.0, 120.0, 20.0], 1, 1)
+    B["obj-55"].update(text="expr $i1*0.25 + ($i1%2)*$f2", outlettype=[""])
+    B["obj-56"].update(text="expr $i1*0.0625 + (($i1/4)%2)*$f2", outlettype=[""])
+    wire("obj-350", 0, "obj-351", 0)
+    wire("obj-351", 0, "obj-55", 1)
+    wire("obj-351", 0, "obj-56", 1)
 
     # Per hit: unpack "name vel"; velocity (right outlet) lands in dict.pack before the name fires the pitch.
     B["obj-9"].update(text="zl iter 2", numinlets=2, numoutlets=2, outlettype=["", ""])
