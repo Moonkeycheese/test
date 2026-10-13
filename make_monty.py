@@ -19,116 +19,119 @@ usage: python3 make_monty.py [src.amxd] [out.amxd]
 import json, random, struct, sys
 
 CLASSIC = ("Classic Garage", {
-    "kick":   "X.........x.....|X.........x.....",
-    "snare1": "....X.......X...|....X.......X..g",
-    "snare2": "....x.......x...|....x.......x...",
-    "hat1":   "..x.......x.....|..x.......x.....",
-    "hat3":   "......x.......x.|......x.......x.",
-    "tamb":   ".g.x.g.g.g.x.g.g|.g.x.g.g.g.x.g.x",
-    "clap":   "...........g....|.......g........",
+    "kick":    "X.........x.....|X.........x.....",
+    "snare":   "....X.......X...|....X.......X..g",
+    "rim":     "...........g....|.......g........",
+    "clap":    "....x.......x...|....x.......x...",
+    "hat":     "..x.......x.....|..x.......x.....",
+    "open":    "......x.......x.|......x.......x.",
+    "shaker":  ".g.x.g.g.g.x.g.g|.g.x.g.g.g.x.g.x",
 })
 PATTERNS = [
     ("2-Step", {
-        "kick":   "X.........x.....|X.........x..g..",
-        "snare1": "....X.......X..g|....X.....g.X...",
-        "hat3":   "..x...x...x...x.|..x...x...x...x.",
-        "tamb":   ".g.x.g.x.g.x.g.x|.g.x.g.x.g.x.g.x",
-        "clap":   "...g.......g....|.......g......x.",
+        "kick":    "X.........x.....|X.........x..g..",
+        "snare":   "....X.......X..g|....X.....g.X...",
+        "rim":     "...g.......g....|.......g......x.",
+        "open":    "..x...x...x...x.|..x...x...x...x.",
+        "shaker":  ".g.x.g.x.g.x.g.x|.g.x.g.x.g.x.g.x",
     }),
     ("Speed 4x4", {
-        "kick":   "X...x...x...x...|X...x...x...x...",
-        "snare2": "....X.......X...|....X.......X...",
-        "hat3":   "..x...x...x...x.|..x...x...x...x.",
-        "hat2":   ".g.g...g.g.g...g|...g...g...g.g.g",
-        "tamb":   ".g...g...g...g..|.g...g...g...x.x",
+        "kick":    "X...x...x...x...|X...x...x...x...",
+        "clap":    "....X.......X...|....X.......X...",
+        "open":    "..x...x...x...x.|..x...x...x...x.",
+        "shaker":  ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.x.x",
     }),
     ("Skippy", {
-        "kick":   "X......x..x.....|X.....x...x..g..",
-        "snare1": "....X.......X...|....X.......X...",
-        "snare3": "......g........g|...g.....g......",
-        "hat1":   "..x...x...x...x.|..x...x...x...x.",
-        "hat2":   ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g.g",
+        "kick":    "X......x..x.....|X.....x...x..g..",
+        "snare":   "....X.......X...|....X.......X...",
+        "ghost":   "......g........g|...g.....g......",
+        "hat":     "..x...x...x...x.|..x...x...x...x.",
+        "shaker":  ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g.g",
     }),
-    ("Rim Ride", {
-        "kick":   "X.........x.....|X..g......x.....",
-        "snare1": "....X.......X...|....X.......X...",
-        "clap":   "...x..g..g.x..g.|...x..g....x.g.x",
-        "ride":   "g.x.g.x.g.x.g.x.|g.x.g.x.g.x.g.x.",
-        "hat2":   "...g...g...g...g|...g...g...g...g",
+    ("Rim Shuffle", {
+        "kick":    "X.........x.....|X..g......x.....",
+        "snare":   "....X.......X...|....X.......X...",
+        "rim":     "...x..g..g.x..g.|...x..g....x.g.x",
+        "hat":     "g.x.g.x.g.x.g.x.|g.x.g.x.g.x.g.x.",
+        "shaker":  "...g...g...g...g|...g...g...g...g",
     }),
     ("Broken Fill", {
-        "kick":   "X.....x...x.....|X.....x..x......",
-        "snare1": "....X.......X...|....X.......Xgxx",
-        "clap":   "...........g....|.......g...g....",
-        "hat3":   "..x...x.......x.|..x...x...x.....",
-        "hat1":   ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g..",
+        "kick":    "X.....x...x.....|X.....x..x......",
+        "snare":   "....X.......X...|....X.......Xgxx",
+        "rim":     "...........g....|.......g...g....",
+        "hat":     ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g..",
+        "open":    "..x...x.......x.|..x...x...x.....",
     }),
     ("Future Shuffle", {
-        "kick":   "X........x......|X.......x.g.....",
-        "snare1": "....>.......>...|....>.......>...",
-        "snare3": "......g......g..|..........g..g.g",
-        "clap":   ".......x......g.|...g.......x....",
-        "hat2":   ".g.x..g.x.g..x.g|.g.x..g.x.g..x.g",
-        "tamb":   "g...x...g...x...|g...x...g...x...",
+        "kick":    "X........x......|X.......x.g.....",
+        "snare":   "....>.......>...|....>.......>...",
+        "ghost":   "......g......g..|..........g..g.g",
+        "rim":     ".......x......g.|...g.......x....",
+        "shaker":  "gg.xx.g.x.g.xx.g|gg.xx.g.x.g.xx.g",
     }),
     ("Future Half", {
-        "kick":   "X.........x.....|X.....x......g..",
-        "snare1": "........>.......|........>.......",
-        "snare2": "........>.......|........>.......",
-        "snare3": "...g.......d....|...d.......d....",
-        "hat3":   "......x.......x.|......x.......x.",
-        "tamb":   ".g.g.x.g.g.g.x.g|.g.g.x.g.g.g.x.g",
+        "kick":    "X.........x.....|X.....x......g..",
+        "snare":   "........>.......|........>.......",
+        "ghost":   "...g.......d....|...d.......d....",
+        "clap":    "........>.......|........>.......",
+        "open":    "......x.......x.|......x.......x.",
+        "shaker":  ".g.g.x.g.g.g.x.g|.g.g.x.g.g.g.x.g",
     }),
     ("Future Roll", {
-        "kick":   "X.........x.....|X.......x.x.....",
-        "snare1": "....X.......X...|....X.......X...",
-        "snare3": ".......d.......d|...........d...d",
-        "clap":   "..g.....x.g...x.|..g.....x.g..x..",
-        "hat1":   "g.xgg.x.g.xgg.x.|g.x.g.xgg.x.g.xg",
+        "kick":    "X.........x.....|X.......x.x.....",
+        "snare":   "....X.......X...|....X.......X...",
+        "ghost":   ".......d.......d|...........d...d",
+        "rim":     "..g.....x.g...x.|..g.....x.g..x..",
+        "hat":     "g.xgg.x.g.xgg.x.|g.x.g.xgg.x.g.xg",
     }),
-    # Late-kick future garage: 'L' / '>' / 'd' kicks sit one 64th behind the grid, snares stay on it.
     ("Late Step", {
-        "kick":   "L........>......|L........>...d..",
-        "snare1": "....X......X....|....X......X....",
-        "clap":   ".......g........|...g...g........",
-        "hat1":   "..xg..xg..xg..xg|..xg..xg..xg..xg",
-        "tamb":   ".g...g...g...g..|.g...g...g...g..",
+        "kick":    "L........>......|L........>...d..",
+        "snare":   "....X......X....|....X......X....",
+        "rim":     ".......g........|...g...g........",
+        "hat":     "..xg..xg..xg..xg|..xg..xg..xg..xg",
+        "shaker":  ".g...g...g...g..|.g...g...g...g..",
     }),
     ("Late Bounce", {
-        "kick":   "L.....>..>....d.|L.....>...>...d.",
-        "snare1": "....X......X....|....X......X....",
-        "clap":   "...g...g........|...g...g.....g..",
-        "hat1":   "..x...x...x...x.|..x...x...x...x.",
-        "hat2":   "...g...g...g...g|...g...g...g...g",
+        "kick":    "L.....>..>....d.|L.....>...>...d.",
+        "snare":   "....X......X....|....X......X....",
+        "rim":     "...g...g........|...g...g.....g..",
+        "hat":     "..x...x...x...x.|..x...x...x...x.",
+        "shaker":  "...g...g...g...g|...g...g...g...g",
     }),
     ("Lazy Half", {
-        "kick":   "L.........>.....|L......>..>.....",
-        "snare1": "........X.......|........X.......",
-        "snare3": "...g.......g....|...g.......g...g",
-        "clap":   "......g.......g.|......g.......g.",
-        "hat1":   "..x.g.x.g.x.g.x.|..x.g.x.g.x.g.x.",
-        "tamb":   ".g.g...g.g.g...g|.g.g...g.g.g...g",
+        "kick":    "L.........>.....|L......>..>.....",
+        "snare":   "........X.......|........X.......",
+        "ghost":   "...g.......g....|...g.......g...g",
+        "rim":     "......g.......g.|......g.......g.",
+        "hat":     "..x.g.x.g.x.g.x.|..x.g.x.g.x.g.x.",
+        "shaker":  ".g.g...g.g.g...g|.g.g...g.g.g...g",
     }),
     ("Ghost Step", {
-        "kick":   "L......>..>.....|L.........>..d..",
-        "snare1": "....X......X....|....X......X....",
-        "snare3": "...g...g.....g..|.g.....g.....g..",
-        "clap":   "......g.........|..........g.....",
-        "hat1":   "..xg..xg..xg...g|..xg..xg..xg...g",
-        "hat3":   "..............x.|..............x.",
+        "kick":    "L......>..>.....|L.........>..d..",
+        "snare":   "....X......X....|....X......X....",
+        "ghost":   "...g...g.....g..|.g.....g.....g..",
+        "rim":     "......g.........|..........g.....",
+        "hat":     "..xg..xg..xg...g|..xg..xg..xg...g",
+        "open":    "..............x.|..............x.",
     }),
 ]
 # Grid char -> velocity and play probability (%). 'L' (accent), '>' and 'd' (ghost) are dragged one 64th late.
 DRAGGED = "L>d"
 VELOCITY = {"X": 120, "x": 100, "L": 120, ">": 100, "g": 55, "d": 55}
 OTHER_NAMES = ["Swing Steppa", "Tamb Bounce"]  # the reference device's 2nd and 3rd patterns
+# Grid lanes -> the device's internal instrument names (from the reference device's 11 slots; ride,
+# hat4 and hat2 are hidden). Defaults follow the standard Ableton Drum Rack pads, so any kit works.
+LANES = {"kick": "kick", "snare": "snare1", "ghost": "snare3", "rim": "clap", "clap": "snare2",
+         "hat": "hat1", "open": "hat3", "shaker": "tamb"}
 # Order of the 11 instrument toggles in the preset "active" message lists.
 INSTRUMENTS = ["kick", "clap", "hat1", "ride", "hat3", "hat4", "hat2", "tamb", "snare1", "snare2", "snare3"]
+# The reference device's own two patterns use the old lanes: fold them into the 8 kept ones.
+OLD_LANES = {"hat2": "tamb", "hat5": "tamb", "ride": "hat1", "hat4": "hat3", "chat": "hat1"}
 STEPS = 128  # 64ths in 2 bars, same as the reference device's 64th preset
 # shortcut: Rnd picks from combos built at build time, not live; move to a js object if 64 isn't enough.
 RANDOM_SLOTS = 64
 NO_RANDOM_GROOVE = {"Speed 4x4"}  # its four-on-the-floor kick hits the snares: only in its own preset
-GROUPS = [["kick"], ["snare1", "snare2", "snare3"], ["hat1", "hat2", "hat3", "ride"], ["tamb", "clap"]]
+GROUPS = [["kick"], ["snare", "ghost", "clap"], ["hat", "open"], ["shaker", "rim"]]
 
 
 def random_combos(n, seed=7):
@@ -157,18 +160,19 @@ def to_coll(patterns, steps=STEPS, sub=4):
     for v, (_, grid) in enumerate(patterns):
         for inst, row in grid.items():
             row = row.replace("|", "")
-            assert inst in INSTRUMENTS and len(row) == 32, (inst, row)
+            assert inst in LANES and len(row) == 32, (inst, row)
             for step, c in enumerate(row):
                 if c == ".":
                     continue
                 assert sub == 4 or c not in DRAGGED, "drags need the 64th path"
                 pos = step * sub + (c in DRAGGED)  # swing is added live by the Swing control
-                hits.setdefault(v * steps + pos, []).extend([inst, VELOCITY[c]])
+                hits.setdefault(v * steps + pos, []).extend([LANES[inst], VELOCITY[c]])
     return {"count": len(hits), "data": [{"key": k, "value": hits[k]} for k in sorted(hits)]}
 
 
 def active_flags(grid):
-    return " ".join("1" if i in grid else "0" for i in INSTRUMENTS)
+    used = {LANES[k] for k in grid}
+    return " ".join("1" if i in used else "0" for i in INSTRUMENTS)
 
 
 # --- amxd container: 24-byte header, then 'ptch' chunk holding 'mx@c' + files + 'dlst' directory
@@ -291,8 +295,8 @@ def build(src):
     rnd = json.loads(json.dumps(B["obj-88"]))
     rnd.update(id="obj-313", text="Rnd", varname="Rnd", patching_rect=[470.0, 8.0, 40.0, 20.0])
     # Menu, Rnd and Go share the bottom row; Live's Generate panel crops anything past x=150.
-    rnd["presentation_rect"] = [98.0, 106.0, 24.0, 16.0]
-    B["obj-88"]["presentation_rect"] = [124.0, 106.0, 25.0, 16.0]
+    rnd["presentation_rect"] = [98.0, 90.0, 24.0, 16.0]
+    B["obj-88"]["presentation_rect"] = [124.0, 90.0, 25.0, 16.0]
     rnd["saved_attribute_attributes"]["valueof"].update(parameter_longname="Rnd", parameter_shortname="Rnd")
     P["boxes"].append({"box": rnd})
     P["parameters"]["obj-313"] = ["Rnd", "Rnd", 0]
@@ -333,7 +337,9 @@ def build(src):
     for c in ("obj-42", "obj-45"):
         for e in B[c]["coll_data"]["data"]:
             if e["value"] != [0]:
-                e["value"] = [x for name in e["value"] for x in (name, 100)]
+                names = list(dict.fromkeys(OLD_LANES.get(n, n) for n in e["value"]))
+                assert all(n in LANES.values() for n in names), names
+                e["value"] = [x for name in names for x in (name, 100)]
     # Its 64th preset had swing baked in (+1 64th on odd 16ths): straighten it, notes stay on the grid.
     # Rests ("0" values) are dropped: a missing key plays nothing, same as a 0.
     data = [e for e in B["obj-42"]["coll_data"]["data"] if e["value"] != [0]]
@@ -346,12 +352,12 @@ def build(src):
     assert len({e["key"] for e in data}) == len(data)
     B["obj-42"]["coll_data"] = {"count": len(data), "data": data}
 
-    # Swing box (in the empty grid cell under Snare3): 0 = straight, notes on the grid. Turning it up pushes
+    # Swing box (under the lanes): 0 = straight, notes on the grid. Turning it up pushes
     # odd 16ths late by swing * 0.00125 beats: 50 = one 64th (MPC 62.5%), 100 = an 8th-triplet-plus (MPC 75%).
     P["boxes"].append({"box": {
         "id": "obj-350", "maxclass": "live.numbox", "numinlets": 1, "numoutlets": 2, "outlettype": ["", "float"],
         "parameter_enable": 1, "patching_rect": [600.0, 600.0, 60.0, 15.0], "fontsize": 9.0,
-        "presentation": 1, "presentation_rect": [77.0, 86.5, 72.0, 15.0], "varname": "Swing",
+        "presentation": 1, "presentation_rect": [0.0, 71.0, 72.0, 15.0], "varname": "Swing",
         "saved_attribute_attributes": {"valueof": {
             "parameter_longname": "Swing", "parameter_shortname": "Swing", "parameter_type": 1,
             "parameter_mmin": 0, "parameter_mmax": 100, "parameter_initial": [0], "parameter_initial_enable": 1,
@@ -361,12 +367,12 @@ def build(src):
     obj("obj-351", "expr $f1*0.00125", [600.0, 625.0, 120.0, 20.0], 1, 1)
     B["obj-55"].update(text="expr $i1*0.25 + ($i1%2)*$f2", outlettype=[""])
     B["obj-56"].update(text="expr $i1*0.0625 + (($i1/4)%2)*$f2", outlettype=[""])
-    # Turning Swing re-runs the tool at once: [t b f] sets the swing first, then bangs live.miditool.in through
-    # the toggles' throttle (qlim 50), the same way the instrument buttons regenerate. No Random re-roll.
+    # Turning Swing re-runs the tool at once: [t b f] sets the swing first, then bangs live.miditool.in
+    # directly, the same way Go does (no Random re-roll).
     obj("obj-352", "t b f", [600.0, 610.0, 40.0, 20.0], 1, 2)
     wire("obj-350", 0, "obj-352", 0)
     wire("obj-352", 1, "obj-351", 0)
-    wire("obj-352", 0, "obj-40", 0)
+    wire("obj-352", 0, "obj-2", 0)
     wire("obj-351", 0, "obj-55", 1)
     wire("obj-351", 0, "obj-56", 1)
 
@@ -386,7 +392,7 @@ def build(src):
     for k in ("num_lines_patching", "num_lines_presentation"):
         tab.pop(k)
     tab["patching_rect"][3] = 15.0
-    tab["presentation_rect"] = [0.0, 106.0, 96.0, 16.0]
+    tab["presentation_rect"] = [0.0, 90.0, 96.0, 16.0]
     tab["saved_attribute_attributes"]["valueof"].update(parameter_enum=names, parameter_mmax=len(names) - 1)
     B["obj-28"]["presentation"] = 0
     B["obj-28"].pop("presentation_rect")
@@ -427,6 +433,26 @@ def build(src):
     wire("obj-62", 1, "obj-87", 0, 1)
     wire("obj-62", 2, "obj-82", 0)
     wire("obj-62", 0, "obj-53", 0)
+
+    # 8 lanes, 2 columns x 4 rows: (label, toggle, note box, default note). Ghost plays the snare pad quietly.
+    UI = [("Kick", "obj-57", "obj-15", 36), ("Snare", "obj-73", "obj-74", 38), ("Ghost", "obj-4", "obj-5", 38),
+          ("Rim", "obj-52", "obj-16", 37), ("Clap", "obj-70", "obj-72", 39), ("Hat", "obj-50", "obj-17", 42),
+          ("Open", "obj-46", "obj-19", 46), ("Shaker", "obj-64", "obj-69", 44)]
+    for k, (label, tog, num, note) in enumerate(UI):
+        col, row = divmod(k, 4)
+        y = 2.0 + 17.0 * row
+        B[tog].update(text=label, texton=label, presentation_rect=[0.0 + 77.0 * col, y, 39.0, 15.0])
+        B[num]["presentation_rect"] = [41.0 + 77.0 * col, y, 31.0, 15.0]
+        B[num]["saved_attribute_attributes"]["valueof"]["parameter_initial"] = [float(note)]
+    for hidden in ("obj-48", "obj-6", "obj-43", "obj-13", "obj-26", "obj-24"):  # ride, hat4, hat2
+        B[hidden]["presentation"] = 0
+        B[hidden].pop("presentation_rect", None)
+    for e in B["obj-10"]["coll_data"]["data"]:  # stored mapping matches the new defaults until Live loads
+        e["value"] = {"snare3": [38.0], "tamb": [44.0], "clap": [37.0], "snare2": [39.0]}.get(e["key"], e["value"])
+    # Light up exactly the lanes the two reference-device patterns use (presets 2 and 3).
+    for msg_id, coll in (("obj-25", "obj-42"), ("obj-1", "obj-45")):
+        used = {n for e in B[coll]["coll_data"]["data"] if e["value"] != [0] for n in e["value"][::2]}
+        SB[msg_id]["text"] = " ".join("1" if i in used else "0" for i in INSTRUMENTS)
 
     check_lines(P)
     check_layout(P)
