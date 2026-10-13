@@ -266,8 +266,9 @@ def build(src):
     msg("obj-316", str(first_rnd), [470.0, 60.0, 40.0, 20.0])
     rnd = json.loads(json.dumps(B["obj-88"]))
     rnd.update(id="obj-313", text="Rnd", varname="Rnd", patching_rect=[470.0, 8.0, 40.0, 20.0])
-    # Above Go: Live's Generate panel crops everything right of Go.
-    rnd["presentation_rect"] = [rnd["presentation_rect"][0], 103.0, rnd["presentation_rect"][2], 16.0]
+    # Menu, Rnd and Go share the bottom row; Live's Generate panel crops anything past x=150.
+    rnd["presentation_rect"] = [98.0, 124.0, 24.0, 16.0]
+    B["obj-88"]["presentation_rect"] = [124.0, 124.0, 25.0, 16.0]
     rnd["saved_attribute_attributes"]["valueof"].update(parameter_longname="Rnd", parameter_shortname="Rnd")
     P["boxes"].append({"box": rnd})
     P["parameters"]["obj-313"] = ["Rnd", "Rnd", 0]
@@ -322,28 +323,22 @@ def build(src):
     B["obj-42"]["coll_data"] = {"count": len(data), "data": data}
 
     # Swing: odd 16ths are pushed late by (swing% * 0.005 - 0.25) beats; 62.5% = one 64th.
-    numbox("obj-350", "Swing", "Sw %d%%", 50, 75, 62, [77.0, 86.0, 36.0, 15.0], "Swing for odd 16ths (50 = straight)")
+    numbox("obj-350", "Swing", "Sw %d", 50, 75, 62, [0.0, 105.0, 36.0, 15.0], "Swing for odd 16ths (50 = straight)")
     obj("obj-351", "expr $f1*0.005 - 0.25", [600.0, 625.0, 120.0, 20.0], 1, 1)
     B["obj-55"].update(text="expr $i1*0.25 + ($i1%2)*$f2", outlettype=[""])
     B["obj-56"].update(text="expr $i1*0.0625 + (($i1/4)%2)*$f2", outlettype=[""])
     wire("obj-350", 0, "obj-351", 0)
     wire("obj-351", 0, "obj-55", 1)
     wire("obj-351", 0, "obj-56", 1)
-    numbox("obj-352", "Density", "Den %d", 0, 100, 50, [113.5, 86.0, 36.0, 15.0], "Optional hits: 0 none, 50 as written, 100 busiest")
-    numbox("obj-353", "Humanize", "Hum %d%%", 0, 100, 20, [0.0, 104.0, 58.0, 15.0], "Random timing and velocity per hit")
-    numbox("obj-355", "Dynamics", "Dyn %d%%", 0, 150, 100, [61.0, 104.0, 58.0, 15.0], "Ghost/accent depth: 0 flat, 100 as written")
+    numbox("obj-352", "Density", "Den %d", 0, 100, 50, [38.0, 105.0, 36.0, 15.0], "Optional hits: 0 none, 50 as written, 100 busiest")
+    numbox("obj-353", "Humanize", "Hum %d", 0, 100, 20, [76.0, 105.0, 36.0, 15.0], "Random timing and velocity per hit")
+    numbox("obj-355", "Dynamics", "Dyn %d", 0, 150, 100, [114.0, 105.0, 36.0, 15.0], "Ghost/accent depth: 0 flat, 100 as written")
     obj("obj-354", "/ 100.", [600.0, 700.0, 45.0, 20.0], 2, 1, "float")
     obj("obj-356", "/ 100.", [600.0, 750.0, 45.0, 20.0], 2, 1, "float")
     wire("obj-353", 0, "obj-354", 0)
     wire("obj-355", 0, "obj-356", 0)
-    # Turning a control regenerates like the instrument toggles do (qlim path, no Random re-roll);
-    # deferlow lets the control's value land in its expr before the regenerate runs.
-    obj("obj-380", "t b", [660.0, 600.0, 25.0, 20.0], 1, 1, "bang")
-    obj("obj-381", "deferlow", [660.0, 625.0, 55.0, 20.0], 1, 1)
-    for knob in ("obj-350", "obj-352", "obj-353", "obj-355"):
-        wire(knob, 0, "obj-380", 0)
-    wire("obj-380", 0, "obj-381", 0)
-    wire("obj-381", 0, "obj-40", 0)
+    # No regenerate trigger here: Live's Auto Apply re-runs the tool when a control changes, and a second
+    # self-triggered apply cycle made Live report "Did not receive a Note dictionary in time".
 
     # Per hit: unpack "name vel prob". Order is prob, vel, then name, so the gate, velocity and
     # start time are all set before the name fires the pitch into dict.pack.
@@ -413,7 +408,8 @@ def build(src):
     tab["maxclass"] = "live.menu"
     for k in ("num_lines_patching", "num_lines_presentation"):
         tab.pop(k)
-    tab["patching_rect"][3] = tab["presentation_rect"][3] = 15.0
+    tab["patching_rect"][3] = 15.0
+    tab["presentation_rect"] = [0.0, 124.0, 96.0, 16.0]
     tab["saved_attribute_attributes"]["valueof"].update(parameter_enum=names, parameter_mmax=len(names) - 1)
     B["obj-28"]["presentation"] = 0
     B["obj-28"].pop("presentation_rect")
@@ -440,6 +436,20 @@ def build(src):
                                     "text": active_flags(grid)}})
         sp["lines"].append({"patchline": {"source": ["obj-2", 3 + v], "destination": [mid, 0]}})
         sp["lines"].append({"patchline": {"source": [mid, 0], "destination": ["obj-24", 0]}})
+
+    # Send the notes back right after generating, in the same apply cycle: [t b l clear] clears the
+    # note array, generates, then bangs zl.reg into live.miditool.out (no reliance on miditool.in's
+    # outlet order, which could leave an apply cycle unanswered).
+    B["obj-62"].update(text="t b l clear", numoutlets=3, outlettype=["bang", "", ""])
+    unwire(src=["obj-62", 0])
+    unwire(src=["obj-62", 1])
+    unwire(src=["obj-2", 0])
+    unwire(src=["obj-66", 0])
+    P["boxes"] = [x for x in P["boxes"] if x["box"]["id"] != "obj-66"]  # its [t b] is no longer used
+    wire("obj-62", 1, "obj-59", 0, 0)
+    wire("obj-62", 1, "obj-87", 0, 1)
+    wire("obj-62", 2, "obj-82", 0)
+    wire("obj-62", 0, "obj-53", 0)
 
     check_lines(P)
     check_layout(P)
