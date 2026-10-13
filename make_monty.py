@@ -192,6 +192,15 @@ def check_lines(patcher):
             check_lines(b["patcher"])
 
 
+def check_triggers(patcher):
+    for b in patcher["boxes"]:
+        t = b["box"].get("text", "").split()
+        if t and t[0] in ("t", "trigger"):
+            assert all(a in ("b", "f", "i", "l", "s", "clear") for a in t[1:]), b["box"]["text"]
+        if "patcher" in b["box"]:
+            check_triggers(b["box"]["patcher"])
+
+
 def check_layout(patcher):
     shown = [b["box"] for b in patcher["boxes"] if b["box"].get("presentation")]
     for i, a in enumerate(shown):
@@ -387,15 +396,15 @@ def build(src):
     obj("obj-373", "f", [328.0, 600.0, 30.0, 20.0], 2, 1, "float")
     obj("obj-374", "+ 0.", [328.0, 730.0, 35.0, 20.0], 2, 1, "float")
     obj("obj-375", "maximum 0.", [328.0, 755.0, 65.0, 20.0], 2, 1, "float")
-    obj("obj-377", "t a b", [103.0, 470.0, 40.0, 20.0], 1, 2)
-    unwire(src=["obj-47", 0])
-    wire("obj-47", 0, "obj-377", 0)
-    wire("obj-377", 0, "obj-12", 0)
+    # The step's start time arrives once per step, before that step's hits: it stores the start in [f]
+    # and rolls the step's jitter. (Max's trigger has no "anything" type, so the coll output can't be split.)
+    obj("obj-377", "t f b", [328.0, 575.0, 35.0, 20.0], 1, 2)
+    wire("obj-41", 0, "obj-377", 0)
+    wire("obj-377", 0, "obj-373", 1)
     wire("obj-377", 1, "obj-369", 0)
     wire("obj-369", 0, "obj-370", 0)
     wire("obj-354", 0, "obj-370", 1)
     wire("obj-370", 0, "obj-374", 1)
-    wire("obj-41", 0, "obj-373", 1)
     wire("obj-366", 0, "obj-373", 0)
     wire("obj-373", 0, "obj-374", 0)
     wire("obj-374", 0, "obj-375", 0)
@@ -453,6 +462,7 @@ def build(src):
 
     check_lines(P)
     check_layout(P)
+    check_triggers(P)
     files[0]["data"] = json.dumps(patch, indent="\t").encode() + b"\n\0"
     files[0]["fnam"] = b"Monty Garage Patterns.amxd"
     out = pack(head, mxc, files)
