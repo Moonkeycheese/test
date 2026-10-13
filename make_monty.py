@@ -1,9 +1,7 @@
 """Build "Monty Garage Patterns.amxd" from "Instant_Garage_v3.amxd".
 
-Preset 1 is CLASSIC (2 bars of 16ths, in the reference device's first coll).
-Presets 2-3 are the reference device's other two patterns, renamed. The
-PATTERNS below live in one embedded coll (---monty) on the 64th-note path,
-2 bars each.
+The PATTERNS below (Classic Garage first) live in one embedded coll (---monty)
+on the 64th-note path, 2 bars each. The reference device's own patterns are gone.
 
 Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'X' accent, 'x' hit,
 'g' ghost; 'L' accent, '>' hit and 'd' ghost are dragged one 64th late.
@@ -18,119 +16,55 @@ usage: python3 make_monty.py [src.amxd] [out.amxd]
 """
 import json, random, struct, sys
 
-CLASSIC = ("Classic Garage", {
-    "kick":    "X.........x.....|X.........x.....",
-    "snare":   "....X.......X...|....X.......X..g",
-    "rim":     "...........g....|.......g........",
-    "clap":    "....x.......x...|....x.......x...",
-    "hat":     "..x.......x.....|..x.......x.....",
-    "open":    "......x.......x.|......x.......x.",
-    "shaker":  ".g.x.g.g.g.x.g.g|.g.x.g.g.g.x.g.x",
-})
 PATTERNS = [
-    ("2-Step", {
-        "kick":    "X.........x.....|X.........x..g..",
-        "snare":   "....X.......X..g|....X.......X...",
-        "rim":     "...g.......g....|.......g......x.",
-        "open":    "..x...x...x...x.|..x...x...x...x.",
-        "shaker":  ".g.x.g.x.g.x.g.x|.g.x.g.x.g.x.g.x",
+    ("Classic Garage", {  # Classic 2-step UK garage
+        "kick":    "X.........x.....|X.........x.....",
+        "snare":   "....X.......X...|....X.......X..g",
+        "hat":     "..x.......x.....|..x.......x.....",
+        "open":    "......x.......x.|......x.......x.",
+        "shaker":  ".g.x.g.g.g.x.g.g|.g.x.g.g.g.x.g.x",
     }),
-    ("Speed 4x4", {
+    ("Speed 4x4", {  # 4x4 speed garage
         "kick":    "X...x...x...x...|X...x...x...x...",
         "clap":    "....X.......X...|....X.......X...",
         "open":    "..x...x...x...x.|..x...x...x...x.",
         "shaker":  ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.x.x",
     }),
-    ("Skippy", {
+    ("Skippy", {  # Skippy 2-step with a syncopated kick
         "kick":    "X......x..x.....|X.....x...x..g..",
         "snare":   "....X.......X...|....X.......X...",
         "ghost":   "......g........g|...g.....g......",
         "hat":     "..x...x...x...x.|..x...x...x...x.",
         "shaker":  ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g.g",
     }),
-    ("Rim Shuffle", {
-        "kick":    "X.........x.....|X.........x.....",
-        "snare":   "....X.......X...|....X.......X...",
-        "rim":     "...x..g..g.x..g.|...x..g....x.g.x",
-        "hat":     "g.x.g.x.g.x.g.x.|g.x.g.x.g.x.g.x.",
-        "shaker":  "...g...g...g...g|...g...g...g...g",
-    }),
-    ("Broken Fill", {
-        "kick":    "X.....x...x.....|X.....x..x......",
-        "snare":   "....X.......X...|....X.......Xgxx",
-        "rim":     "...........g....|.......g...g....",
-        "hat":     ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g..",
-        "open":    "..x...x.......x.|..x...x...x.....",
-    }),
-    ("Future Shuffle", {
-        "kick":    "X........x......|X.......x.g.....",
-        "snare":   "....>.......>...|....>.......>...",
-        "ghost":   "......g......g..|.............g.g",
-        "rim":     ".......x......g.|...g.......x....",
-        "shaker":  "gg.xx.g.x.g.xx.g|gg.xx.g.x.g.xx.g",
-    }),
-    ("Future Half", {
-        "kick":    "X.........x.....|X.....x......g..",
-        "snare":   "........>.......|........>.......",
-        "ghost":   "...g.......d....|...d.......d....",
-        "clap":    "........>.......|........>.......",
-        "open":    "......x.......x.|......x.......x.",
-        "shaker":  ".g.g.x.g.g.g.x.g|.g.g.x.g.g.g.x.g",
-    }),
-    ("Future Roll", {
-        "kick":    "X.........x.....|X.......x.x.....",
-        "snare":   "....X.......X...|....X.......X...",
-        "ghost":   ".......d.......d|...........d...d",
-        "rim":     "..g.....x.....x.|..g....x.....x..",
-        "hat":     "g.xgg.x.g.xgg.x.|g.x.g.xgg.x.g.xg",
-    }),
-    ("Late Step", {
+    ("Late Step", {  # Future garage, late Burial-style kick
         "kick":    "L........>......|L........>...d..",
         "snare":   "....X......X....|....X......X....",
         "rim":     ".......g........|...g...g........",
         "hat":     "..xg..xg..xg..xg|..xg..xg..xg..xg",
         "shaker":  ".g...g...g...g..|.g...g...g...g..",
     }),
-    ("Late Bounce", {
-        "kick":    "L.....>..>....d.|L.....>...>...d.",
-        "snare":   "....X......X....|....X......X....",
-        "rim":     "...g...g........|...g...g.....g..",
-        "hat":     "..x...x...x...x.|..x...x...x...x.",
-        "shaker":  "...g...g...g...g|...g...g...g...g",
-    }),
-    ("Lazy Half", {
+    ("Lazy Half", {  # Half-time future garage with a late kick
         "kick":    "L.........>.....|L......>..>.....",
         "snare":   "........X.......|........X.......",
         "ghost":   "...g.......g....|...g.......g...g",
-        "rim":     "......g.......g.|......g.......g.",
-        "hat":     "..x.g.x.g.x.g.x.|..x.g.x.g.x.g.x.",
+        "hat":     "..x...x...x...x.|..x...x...x...x.",
         "shaker":  ".g.g...g.g.g...g|.g.g...g.g.g...g",
-    }),
-    ("Ghost Step", {
-        "kick":    "L......>..>.....|L.........>..d..",
-        "snare":   "....X......X....|....X......X....",
-        "ghost":   "...g.........g..|.g.....g........",
-        "rim":     "......g.........|.........g......",
-        "hat":     "..xg..xg..xg...g|..xg..xg..xg...g",
-        "open":    "..............x.|..............x.",
     }),
 ]
 # Grid char -> velocity and play probability (%). 'L' (accent), '>' and 'd' (ghost) are dragged one 64th late.
 DRAGGED = "L>d"
 VELOCITY = {"X": 120, "x": 100, "L": 120, ">": 100, "g": 55, "d": 55}
-OTHER_NAMES = ["Swing Steppa", "Tamb Bounce"]  # the reference device's 2nd and 3rd patterns
 # Grid lanes -> the device's internal instrument names (from the reference device's 11 slots; ride,
 # hat4 and hat2 are hidden). Defaults follow the standard Ableton Drum Rack pads, so any kit works.
 LANES = {"kick": "kick", "snare": "snare1", "ghost": "snare3", "rim": "clap", "clap": "snare2",
          "hat": "hat1", "open": "hat3", "shaker": "tamb"}
 # Order of the 11 instrument toggles in the preset "active" message lists.
 INSTRUMENTS = ["kick", "clap", "hat1", "ride", "hat3", "hat4", "hat2", "tamb", "snare1", "snare2", "snare3"]
-# The reference device's own two patterns use the old lanes: fold them into the 8 kept ones.
-OLD_LANES = {"hat2": "tamb", "hat5": "tamb", "ride": "hat1", "hat4": "hat3", "chat": "hat1"}
 STEPS = 128  # 64ths in 2 bars, same as the reference device's 64th preset
 # shortcut: Rnd picks from combos built at build time, not live; move to a js object if 64 isn't enough.
 RANDOM_SLOTS = 64
-NO_RANDOM_GROOVE = {"Speed 4x4"}  # its four-on-the-floor kick hits the snares: only in its own preset
+MAX_LANES = 5  # keep every preset simple
 GROUPS = [["kick"], ["snare", "ghost", "clap"], ["hat", "open"], ["shaker", "rim"]]
 
 
@@ -145,24 +79,29 @@ def clashes(grid):
             and any(hit(k, i) for k in SNARE_FAMILY)]
 
 
-def random_combos(n, seed=7):
-    """Each combo keeps one pattern's kick + snares together (its groove) and takes hats and perc from
-    other patterns. No extra hits are invented, and no combo repeats a preset or another combo."""
-    rng = random.Random(seed)  # fixed seed: rebuilding gives the same device
-    pats = [g for _, g in [CLASSIC] + PATTERNS]
-    grooves = [g for name, g in [CLASSIC] + PATTERNS if name not in NO_RANDOM_GROOVE]
+def four_on_the_floor(grid):
+    kick = grid.get("kick", "").replace("|", "")
+    return bool(kick) and all(kick[i] != "." for i in range(0, 32, 4))
+
+
+def random_combos(n=RANDOM_SLOTS, seed=7):
+    """Each combo keeps one preset's kick + snare lanes together (its groove) and takes the hats and the
+    perc (shaker, rim) from other presets. Nothing is invented; a 4x4 kick only lives in its own preset;
+    no combo repeats a preset or another combo, or stacks kick / snare / ghost / rim (see clashes)."""
+    pats = [g for _, g in PATTERNS]
+    grooves = [g for g in pats if not four_on_the_floor(g)]
+    pick = lambda src, group: {i: src[i] for i in group if i in src}
     flat = lambda g: json.dumps({k: v.replace("|", "") for k, v in g.items()}, sort_keys=True)
-    seen, combos = {flat(g) for g in pats}, []
-    while len(combos) < n:
-        groove = rng.choice(grooves)
-        grid = {i: groove[i] for i in GROUPS[0] + GROUPS[1] if i in groove}
-        for group in GROUPS[2:]:
-            src = rng.choice([g for g in pats if any(i in g for i in group)])
-            grid.update({i: src[i] for i in group if i in src})
-        if flat(grid) not in seen and not clashes(grid):
-            seen.add(flat(grid))
-            combos.append(("random", grid))
-    return combos
+    seen, out = {flat(g) for g in pats}, []
+    for groove in grooves:
+        for hats in pats:
+            for perc in pats:
+                grid = {**pick(groove, GROUPS[0] + GROUPS[1]), **pick(hats, GROUPS[2]), **pick(perc, GROUPS[3])}
+                if flat(grid) not in seen and not clashes(grid):
+                    seen.add(flat(grid))
+                    out.append(("random", grid))
+    random.Random(seed).shuffle(out)  # fixed seed: rebuilding gives the same device
+    return out[:n]
 
 
 def to_coll(patterns, steps=STEPS, sub=4):
@@ -287,21 +226,22 @@ def build(src):
     obj("obj-305", "maximum 0", [180.0, 425.0, 64.0, 20.0], 2, 1, "int")
     obj("obj-306", "* %d" % STEPS, [180.0, 450.0, 40.0, 20.0], 2, 1, "int")
     obj("obj-301", "+ 0", [247.0, 360.0, 29.0, 20.0], 2, 1, "int")
+    combos = random_combos()
     obj("obj-302", "coll ---monty @embed 1", [247.0, 390.0, 130.0, 20.0], 1, 4,
-        coll_data=to_coll(PATTERNS + random_combos(RANDOM_SLOTS)), saved_object_attributes={"embed": 1, "precision": 6})
+        coll_data=to_coll(PATTERNS + combos), saved_object_attributes={"embed": 1, "precision": 6})
     P["boxes"].append({"box": {"id": "obj-307", "maxclass": "comment", "numinlets": 1, "numoutlets": 0,
                                "patching_rect": [176.0, 795.0, 420.0, 18.0],
                                "text": "---monty key = (preset - 3) * 128 + 64th step, value = name velocity pairs. Edit patterns in make_monty.py"}})
     # Random: preset >= first_rnd opens a gate so every Go press first picks a new random slot.
     # Rnd button = select "Random" and press Go.
-    first_rnd = 1 + len(OTHER_NAMES) + len(PATTERNS)
+    first_rnd = 3 + len(PATTERNS)  # internal preset numbers: menu index + 3
     obj("obj-330", "t b b", [16.0, 125.0, 34.0, 20.0], 1, 2, "bang")
     obj("obj-331", "gate 1", [60.0, 150.0, 40.0, 20.0], 2, 1)
     obj("obj-332", ">= %d" % first_rnd, [180.0, 475.0, 40.0, 20.0], 2, 1, "int")
-    obj("obj-311", "random %d" % RANDOM_SLOTS, [60.0, 175.0, 64.0, 20.0], 2, 1, "int")
+    obj("obj-311", "random %d" % len(combos), [60.0, 175.0, 64.0, 20.0], 2, 1, "int")
     obj("obj-312", "+ %d" % first_rnd, [60.0, 200.0, 32.0, 20.0], 2, 1, "int")
     obj("obj-314", "t b b", [470.0, 34.0, 34.0, 20.0], 1, 2, "bang")
-    msg("obj-315", "set %d" % first_rnd, [520.0, 34.0, 40.0, 20.0])
+    msg("obj-315", "set %d" % len(PATTERNS), [520.0, 34.0, 40.0, 20.0])  # menu index of "Random"
     msg("obj-316", str(first_rnd), [470.0, 60.0, 40.0, 20.0])
     rnd = json.loads(json.dumps(B["obj-88"]))
     rnd.update(id="obj-313", text="Rnd", varname="Rnd", patching_rect=[470.0, 8.0, 40.0, 20.0])
@@ -341,29 +281,14 @@ def build(src):
     wire("obj-302", 0, "obj-47", 4)
     wire("obj-56", 0, "obj-41", 4)
 
-    # Preset 1 becomes CLASSIC: 2 bars of 16ths in the reference device's first coll.
-    B["obj-3"]["coll_data"] = to_coll([CLASSIC], steps=32, sub=1)
-    B["obj-65"]["text"] = "% 32"
-    # Every coll value becomes "name velocity" pairs; the reference patterns play at velocity 100.
-    for c in ("obj-42", "obj-45"):
-        for e in B[c]["coll_data"]["data"]:
-            if e["value"] != [0]:
-                names = list(dict.fromkeys(OLD_LANES.get(n, n) for n in e["value"]))
-                assert all(n in LANES.values() for n in names), names
-                family = [n for n in ("kick", "snare1", "clap", "snare3") if n in names]  # priority order
-                names = [n for n in names if n not in family[1:]] if len(family) > 1 else names
-                e["value"] = [x for name in names for x in (name, 100)]
-    # Its 64th preset had swing baked in (+1 64th on odd 16ths): straighten it, notes stay on the grid.
-    # Rests ("0" values) are dropped: a missing key plays nothing, same as a 0.
-    data = [e for e in B["obj-42"]["coll_data"]["data"] if e["value"] != [0]]
-    keys = {e["key"] for e in data}
-    for e in data:
-        if e["key"] % 4:
-            assert e["key"] % 4 == 1 and (e["key"] // 4) % 2 == 1 and e["key"] - 1 not in keys, e
-            e["key"] -= 1
-    data.sort(key=lambda e: e["key"])
-    assert len({e["key"] for e in data}) == len(data)
-    B["obj-42"]["coll_data"] = {"count": len(data), "data": data}
+    # The reference device's three colls are no longer used: every preset lives in ---monty.
+    for c in ("obj-3", "obj-42", "obj-45"):
+        B[c]["coll_data"] = {"count": 0, "data": []}
+    # Menu index m -> internal preset m + 3, so the switches pick ---monty and its offset is m * 128.
+    obj("obj-317", "+ 3", [16.0, 40.0, 29.0, 20.0], 2, 1, "int")
+    unwire(src=["obj-14", 0])
+    wire("obj-14", 0, "obj-317", 0)
+    wire("obj-317", 0, "obj-49", 0)
 
     # Swing box (under the lanes): 0 = straight, notes on the grid. Turning it up pushes
     # odd 16ths late by swing * 0.00125 beats: 50 = one 64th (MPC 62.5%), 100 = an 8th-triplet-plus (MPC 75%).
@@ -398,8 +323,7 @@ def build(src):
     wire("obj-320", 1, "obj-30", 1)
 
     # Preset selector: named menu instead of the 3-way tab, sharing one row with Rnd and Go.
-    names = [CLASSIC[0]] + OTHER_NAMES + [n for n, _ in PATTERNS] + ["Random"]
-    assert len(names) == first_rnd + 1
+    names = [n for n, _ in PATTERNS] + ["Random"]
     tab = B["obj-14"]
     tab["maxclass"] = "live.menu"
     for k in ("num_lines_patching", "num_lines_presentation"):
@@ -414,7 +338,6 @@ def build(src):
     # Grey out unused instrument toggles for each preset.
     sp = B["obj-25"]["patcher"]
     SB = {b["box"]["id"]: b["box"] for b in sp["boxes"]}
-    SB["obj-6"]["text"] = active_flags(CLASSIC[1])
     sel = SB["obj-2"]
     n = first_rnd
     sel.update(text="sel " + " ".join(map(str, range(n))), numinlets=n + 1, numoutlets=n + 1,
@@ -462,13 +385,13 @@ def build(src):
         B[hidden].pop("presentation_rect", None)
     for e in B["obj-10"]["coll_data"]["data"]:  # stored mapping matches the new defaults until Live loads
         e["value"] = {"snare3": [38.0], "tamb": [44.0], "clap": [37.0], "snare2": [39.0]}.get(e["key"], e["value"])
-    # Light up exactly the lanes the two reference-device patterns use (presets 2 and 3).
-    for msg_id, coll in (("obj-25", "obj-42"), ("obj-1", "obj-45")):
-        used = {n for e in B[coll]["coll_data"]["data"] if e["value"] != [0] for n in e["value"][::2]}
-        SB[msg_id]["text"] = " ".join("1" if i in used else "0" for i in INSTRUMENTS)
 
-    for name, grid in [CLASSIC] + PATTERNS:
+    assert len(PATTERNS) == len({n for n, _ in PATTERNS})
+    for name, grid in PATTERNS:
+        rows = {k: v.replace("|", "") for k, v in grid.items()}
         assert not clashes(grid), (name, clashes(grid))
+        assert len(grid) <= MAX_LANES, (name, "too many lanes")
+        assert not any(rows.get("hat", "." * 32)[i] != "." and rows.get("open", "." * 32)[i] != "." for i in range(32)), name
     check_lines(P)
     check_layout(P)
     check_triggers(P)
@@ -482,5 +405,6 @@ def build(src):
 if __name__ == "__main__":
     src = sys.argv[1] if len(sys.argv) > 1 else "Instant_Garage_v3.amxd"
     dst = sys.argv[2] if len(sys.argv) > 2 else "Monty Garage Patterns.amxd"
-    open(dst, "wb").write(build(open(src, "rb").read()))
+    out = build(open(src, "rb").read())
+    open(dst, "wb").write(out)
     print("wrote", dst)
