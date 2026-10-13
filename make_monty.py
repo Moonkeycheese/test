@@ -30,7 +30,7 @@ CLASSIC = ("Classic Garage", {
 PATTERNS = [
     ("2-Step", {
         "kick":    "X.........x.....|X.........x..g..",
-        "snare":   "....X.......X..g|....X.....g.X...",
+        "snare":   "....X.......X..g|....X.......X...",
         "rim":     "...g.......g....|.......g......x.",
         "open":    "..x...x...x...x.|..x...x...x...x.",
         "shaker":  ".g.x.g.x.g.x.g.x|.g.x.g.x.g.x.g.x",
@@ -49,7 +49,7 @@ PATTERNS = [
         "shaker":  ".g.g.g.g.g.g.g.g|.g.g.g.g.g.g.g.g",
     }),
     ("Rim Shuffle", {
-        "kick":    "X.........x.....|X..g......x.....",
+        "kick":    "X.........x.....|X.........x.....",
         "snare":   "....X.......X...|....X.......X...",
         "rim":     "...x..g..g.x..g.|...x..g....x.g.x",
         "hat":     "g.x.g.x.g.x.g.x.|g.x.g.x.g.x.g.x.",
@@ -65,7 +65,7 @@ PATTERNS = [
     ("Future Shuffle", {
         "kick":    "X........x......|X.......x.g.....",
         "snare":   "....>.......>...|....>.......>...",
-        "ghost":   "......g......g..|..........g..g.g",
+        "ghost":   "......g......g..|.............g.g",
         "rim":     ".......x......g.|...g.......x....",
         "shaker":  "gg.xx.g.x.g.xx.g|gg.xx.g.x.g.xx.g",
     }),
@@ -81,7 +81,7 @@ PATTERNS = [
         "kick":    "X.........x.....|X.......x.x.....",
         "snare":   "....X.......X...|....X.......X...",
         "ghost":   ".......d.......d|...........d...d",
-        "rim":     "..g.....x.g...x.|..g.....x.g..x..",
+        "rim":     "..g.....x.....x.|..g....x.....x..",
         "hat":     "g.xgg.x.g.xgg.x.|g.x.g.xgg.x.g.xg",
     }),
     ("Late Step", {
@@ -109,8 +109,8 @@ PATTERNS = [
     ("Ghost Step", {
         "kick":    "L......>..>.....|L.........>..d..",
         "snare":   "....X......X....|....X......X....",
-        "ghost":   "...g...g.....g..|.g.....g.....g..",
-        "rim":     "......g.........|..........g.....",
+        "ghost":   "...g.........g..|.g.....g........",
+        "rim":     "......g.........|.........g......",
         "hat":     "..xg..xg..xg...g|..xg..xg..xg...g",
         "open":    "..............x.|..............x.",
     }),
@@ -134,6 +134,17 @@ NO_RANDOM_GROOVE = {"Speed 4x4"}  # its four-on-the-floor kick hits the snares: 
 GROUPS = [["kick"], ["snare", "ghost", "clap"], ["hat", "open"], ["shaker", "rim"]]
 
 
+SNARE_FAMILY = ["snare", "ghost", "rim"]  # never two on the same 16th, and never with the kick
+
+
+def clashes(grid):
+    """16th steps where two of snare/ghost/rim, or the kick and one of them, play together."""
+    rows = {k: v.replace("|", "") for k, v in grid.items()}
+    hit = lambda lane, i: lane in rows and rows[lane][i] != "."
+    return [i for i in range(32) if sum(hit(k, i) for k in SNARE_FAMILY) + hit("kick", i) > 1
+            and any(hit(k, i) for k in SNARE_FAMILY)]
+
+
 def random_combos(n, seed=7):
     """Each combo keeps one pattern's kick + snares together (its groove) and takes hats and perc from
     other patterns. No extra hits are invented, and no combo repeats a preset or another combo."""
@@ -148,7 +159,7 @@ def random_combos(n, seed=7):
         for group in GROUPS[2:]:
             src = rng.choice([g for g in pats if any(i in g for i in group)])
             grid.update({i: src[i] for i in group if i in src})
-        if flat(grid) not in seen:
+        if flat(grid) not in seen and not clashes(grid):
             seen.add(flat(grid))
             combos.append(("random", grid))
     return combos
@@ -339,6 +350,8 @@ def build(src):
             if e["value"] != [0]:
                 names = list(dict.fromkeys(OLD_LANES.get(n, n) for n in e["value"]))
                 assert all(n in LANES.values() for n in names), names
+                family = [n for n in ("kick", "snare1", "clap", "snare3") if n in names]  # priority order
+                names = [n for n in names if n not in family[1:]] if len(family) > 1 else names
                 e["value"] = [x for name in names for x in (name, 100)]
     # Its 64th preset had swing baked in (+1 64th on odd 16ths): straighten it, notes stay on the grid.
     # Rests ("0" values) are dropped: a missing key plays nothing, same as a 0.
@@ -454,6 +467,8 @@ def build(src):
         used = {n for e in B[coll]["coll_data"]["data"] if e["value"] != [0] for n in e["value"][::2]}
         SB[msg_id]["text"] = " ".join("1" if i in used else "0" for i in INSTRUMENTS)
 
+    for name, grid in [CLASSIC] + PATTERNS:
+        assert not clashes(grid), (name, clashes(grid))
     check_lines(P)
     check_layout(P)
     check_triggers(P)
