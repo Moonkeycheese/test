@@ -58,7 +58,7 @@ PATTERNS = [
         "kick":   "X......o..x.....|X..g......x.....",
         "snare1": "....X.......X...|....X.......X...",
         "clap":   "...x..g..p.x..g.|...x..g....x.p.x",
-        "ride":   "x.g.x.g.x.g.x.g.|x.g.x.g.x.g.x.g.",
+        "ride":   "g.x.g.x.g.x.g.x.|g.x.g.x.g.x.g.x.",
         "hat2":   "...g...g...g...g|...g...g...g...g",
     }),
     ("Broken Fill", {
@@ -79,7 +79,7 @@ PATTERNS = [
     ("Future Half", {
         "kick":   "X......o..x.....|X.....x......g..",
         "snare1": "........>.......|........>.......",
-        "snare2": "........x.......|........x.......",
+        "snare2": "........>.......|........>.......",
         "snare3": "...p.......d....|...d.......d....",
         "hat3":   "......x.......x.|......x.......x.",
         "tamb":   ".g.g.x.g.g.g.x.g|.g.g.x.g.g.g.x.g",
@@ -89,7 +89,7 @@ PATTERNS = [
         "snare1": "....X.......X...|....X.......X...",
         "snare3": ".......d.......d|...........d...d",
         "clap":   "..g.....x.g...x.|..g.....x.g..x..",
-        "hat1":   "x.gpx.g.x.gpx.g.|x.g.x.gpx.g.x.gp",
+        "hat1":   "g.xpg.x.g.xpg.x.|g.x.g.xpg.x.g.xp",
     }),
 ]
 # Grid char -> velocity and play probability (%). '>' and 'd' are also dragged one 64th late.
@@ -101,7 +101,7 @@ INSTRUMENTS = ["kick", "clap", "hat1", "ride", "hat3", "hat4", "hat2", "tamb", "
 STEPS = 128  # 64ths in 2 bars, same as the reference device's 64th preset
 # shortcut: Rnd picks from combos rolled at build time, not live; move to a js object if 64 isn't enough.
 RANDOM_SLOTS = 64
-GROUPS = [["kick"], ["snare1", "snare2", "snare3"], ["hat1", "hat2", "hat3"], ["tamb", "clap", "ride"]]
+GROUPS = [["kick"], ["snare1", "snare2", "snare3"], ["hat1", "hat2", "hat3", "ride"], ["tamb", "clap"]]
 
 
 def random_combos(n, seed=7):
@@ -113,12 +113,13 @@ def random_combos(n, seed=7):
         for group in GROUPS:
             src = rng.choice([g for g in sources if any(i in g for i in group)])
             grid.update({i: src[i].replace("|", "") for i in group if i in src})
-        for _ in range(2):
+        for _ in range(2):  # add a ghost off the beat, where nothing in its group plays
             inst = rng.choice([i for i in grid if i in GROUPS[2] + GROUPS[3]])
-            row, s = list(grid[inst]), rng.randrange(1, 32)
-            if row[s] == ".":
-                row[s] = "p"
-            grid[inst] = "".join(row)
+            grp = next(g for g in GROUPS if inst in g)
+            free = [k for k in range(1, 32) if k % 4 and all(grid[j][k] == "." for j in grid if j in grp)]
+            if free:
+                k = rng.choice(free)
+                grid[inst] = grid[inst][:k] + "p" + grid[inst][k + 1:]
         combos.append(("random", grid))
     return combos
 
@@ -229,7 +230,7 @@ def build(src):
     def numbox(id_, name, units, lo, hi, init, rect, info):
         P["boxes"].append({"box": {
             "id": id_, "maxclass": "live.numbox", "numinlets": 1, "numoutlets": 2, "outlettype": ["", "float"],
-            "parameter_enable": 1, "patching_rect": [600.0, 600.0 + 25 * (int(id_[4:]) - 350), 50.0, 15.0],
+            "parameter_enable": 1, "patching_rect": [600.0, 600.0 + 25 * (int(id_[4:]) - 350), 50.0, 15.0], "fontsize": 8.0,
             "presentation": 1, "presentation_rect": rect, "varname": name,
             "saved_attribute_attributes": {"valueof": {
                 "parameter_longname": name, "parameter_shortname": name, "parameter_type": 1,
@@ -368,14 +369,14 @@ def build(src):
     wire("obj-364", 0, "obj-32", 0)
     #   velocity -> 100 + (vel - 100) * dynamics + humanize jitter (+/- 12 at 100%)
     obj("obj-365", "t i b", [400.0, 530.0, 40.0, 20.0], 1, 2)
-    obj("obj-366", "t b b b", [440.0, 555.0, 50.0, 20.0], 1, 3, "bang")
+    obj("obj-366", "t b b", [440.0, 555.0, 40.0, 20.0], 1, 2, "bang")
     obj("obj-367", "random 1001", [520.0, 580.0, 70.0, 20.0], 2, 1, "int")
     obj("obj-368", "expr ($i1-500)/500.*$f2*12", [520.0, 605.0, 160.0, 20.0], 2, 1)
     obj("obj-372", "expr 100 + ($i1-100)*$f2 + $f3", [400.0, 630.0, 170.0, 20.0], 3, 1)
     obj("obj-376", "clip 1 127", [400.0, 655.0, 60.0, 20.0], 3, 1)
     wire("obj-320", 1, "obj-365", 0)
     wire("obj-365", 1, "obj-366", 0)
-    wire("obj-366", 2, "obj-367", 0)
+    wire("obj-366", 1, "obj-367", 0)
     wire("obj-367", 0, "obj-368", 0)
     wire("obj-354", 0, "obj-368", 1)
     wire("obj-368", 0, "obj-372", 2)
@@ -384,13 +385,18 @@ def build(src):
     wire("obj-372", 0, "obj-376", 0)
     unwire(dst=["obj-30", 1])
     wire("obj-376", 0, "obj-30", 1)
-    #   start time -> step start (stored per step) + humanize jitter (+/- 0.04 beats at 100%)
+    #   start time -> step start (stored per step) + humanize jitter (+/- 0.04 beats at 100%), rolled once
+    #   per step so layered hits (snare + clap) stay together
     obj("obj-369", "random 1001", [460.0, 680.0, 70.0, 20.0], 2, 1, "int")
     obj("obj-370", "expr ($i1-500)/500.*$f2*0.04", [460.0, 705.0, 170.0, 20.0], 2, 1)
     obj("obj-373", "f", [328.0, 600.0, 30.0, 20.0], 2, 1, "float")
     obj("obj-374", "+ 0.", [328.0, 730.0, 35.0, 20.0], 2, 1, "float")
     obj("obj-375", "maximum 0.", [328.0, 755.0, 65.0, 20.0], 2, 1, "float")
-    wire("obj-366", 1, "obj-369", 0)
+    obj("obj-377", "t a b", [103.0, 470.0, 40.0, 20.0], 1, 2)
+    unwire(src=["obj-47", 0])
+    wire("obj-47", 0, "obj-377", 0)
+    wire("obj-377", 0, "obj-12", 0)
+    wire("obj-377", 1, "obj-369", 0)
     wire("obj-369", 0, "obj-370", 0)
     wire("obj-354", 0, "obj-370", 1)
     wire("obj-370", 0, "obj-374", 1)
