@@ -6,7 +6,7 @@ PATTERNS below live in one embedded coll (---monty) on the 64th-note path,
 2 bars each.
 
 Grid: 32 chars = 2 bars of 16ths ('|' is ignored). 'X' accent, 'x' hit,
-'g' ghost; '>' hit and 'd' ghost are dragged one 64th late; 'o' (hit) and
+'g' ghost; 'L' accent, '>' hit and 'd' ghost are dragged one 64th late; 'o' (hit) and
 'p' (ghost) are optional: they play with the probability in PROB, scaled by
 the Density control. Every coll value is "name velocity probability" triples.
 
@@ -91,9 +91,41 @@ PATTERNS = [
         "clap":   "..g.....x.g...x.|..g.....x.g..x..",
         "hat1":   "g.xpg.x.g.xpg.x.|g.x.g.xpg.x.g.xp",
     }),
+    # Late-kick future garage: 'L' / '>' / 'd' kicks sit one 64th behind the grid, snares stay on it.
+    ("Late Step", {
+        "kick":   "L........>......|L........>...d..",
+        "snare1": "....X......X....|....X......X....",
+        "clap":   ".......g........|...p...g........",
+        "hat1":   "..xg..xg..xg..xg|..xg..xg..xg..xg",
+        "tamb":   ".p...p...p...p..|.p...p...p...p..",
+    }),
+    ("Late Bounce", {
+        "kick":   "L.....>..>....d.|L.....>...>...d.",
+        "snare1": "....X......X....|....X......X....",
+        "clap":   "...g...g........|...g...g.....p..",
+        "hat1":   "..x...x...x...x.|..x...x...x...x.",
+        "hat2":   "...p...p...p...p|...p...p...p...p",
+    }),
+    ("Lazy Half", {
+        "kick":   "L.........>.....|L......>..>.....",
+        "snare1": "........X.......|........X.......",
+        "snare3": "...p.......g....|...p.......g...p",
+        "clap":   "......g.......g.|......g.......g.",
+        "hat1":   "..x.g.x.g.x.g.x.|..x.g.x.g.x.g.x.",
+        "tamb":   ".p.p...p.p.p...p|.p.p...p.p.p...p",
+    }),
+    ("Ghost Step", {
+        "kick":   "L......>..>.....|L.........>..d..",
+        "snare1": "....X......X....|....X......X....",
+        "snare3": "...g...p.....g..|.g.....g.....p..",
+        "clap":   "......g.........|..........g.....",
+        "hat1":   "..xg..xg..xg...g|..xg..xg..xg...g",
+        "hat3":   "..............x.|..............x.",
+    }),
 ]
-# Grid char -> velocity and play probability (%). '>' and 'd' are also dragged one 64th late.
-VELOCITY = {"X": 120, "x": 100, ">": 100, "o": 100, "g": 55, "d": 55, "p": 55}
+# Grid char -> velocity and play probability (%). 'L' (accent), '>' and 'd' (ghost) are dragged one 64th late.
+DRAGGED = "L>d"
+VELOCITY = {"X": 120, "x": 100, "L": 120, ">": 100, "o": 100, "g": 55, "d": 55, "p": 55}
 PROB = {"o": 50, "p": 40}  # everything else always plays
 OTHER_NAMES = ["Swing Steppa", "Tamb Bounce"]  # the reference device's 2nd and 3rd patterns
 # Order of the 11 instrument toggles in the preset "active" message lists.
@@ -134,8 +166,8 @@ def to_coll(patterns, steps=STEPS, sub=4):
             for step, c in enumerate(row):
                 if c == ".":
                     continue
-                assert sub == 4 or c not in ">d", "drags need the 64th path"
-                pos = step * sub + (c in ">d")  # swing is added live by the Swing control
+                assert sub == 4 or c not in DRAGGED, "drags need the 64th path"
+                pos = step * sub + (c in DRAGGED)  # swing is added live by the Swing control
                 hits.setdefault(v * steps + pos, []).extend([inst, VELOCITY[c], PROB.get(c, 100)])
     return {"count": len(hits), "data": [{"key": k, "value": hits[k]} for k in sorted(hits)]}
 
