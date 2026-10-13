@@ -24,6 +24,20 @@ PATTERNS = [
         "open":    "......x.......x.|......x.......x.",
         "shaker":  ".g.x.g.g.g.x.g.g|.g.x.g.g.g.x.g.x",
     }),
+    ("Swing Steppa", {  # from the reference device's 2nd pattern (swing now comes from the Swing box)
+        "kick":    "x......x..x.....|x......x..x.....",
+        "snare":   "....x.......x...|....x.......x...",
+        "rim":     ".........x......|.........x...x..",
+        "open":    "..x...x...x...x.|..x...x...xx..x.",
+        "shaker":  "xxx.x.x.x.xxx.x.|x.x.x.x.x.x.x.x.",
+    }),
+    ("Tamb Bounce", {  # from the reference device's 3rd pattern
+        "kick":    "x.....x.x....x..|x.....x.x....x..",
+        "snare":   "....x......x....|....x......x....",
+        "hat":     "..x.......x.....|..x.......x.....",
+        "open":    ".x.......x......|.x.......x......",
+        "shaker":  "x.x.x.xxx.x.x.xx|x.x.x.xxx.x.x.xx",
+    }),
     ("Speed 4x4", {  # 4x4 speed garage
         "kick":    "X...x...x...x...|X...x...x...x...",
         "clap":    "....X.......X...|....X.......X...",
