@@ -335,6 +335,14 @@ def build(src):
     obj("obj-356", "/ 100.", [600.0, 750.0, 45.0, 20.0], 2, 1, "float")
     wire("obj-353", 0, "obj-354", 0)
     wire("obj-355", 0, "obj-356", 0)
+    # Turning a control regenerates like the instrument toggles do (qlim path, no Random re-roll);
+    # deferlow lets the control's value land in its expr before the regenerate runs.
+    obj("obj-380", "t b", [660.0, 600.0, 25.0, 20.0], 1, 1, "bang")
+    obj("obj-381", "deferlow", [660.0, 625.0, 55.0, 20.0], 1, 1)
+    for knob in ("obj-350", "obj-352", "obj-353", "obj-355"):
+        wire(knob, 0, "obj-380", 0)
+    wire("obj-380", 0, "obj-381", 0)
+    wire("obj-381", 0, "obj-40", 0)
 
     # Per hit: unpack "name vel prob". Order is prob, vel, then name, so the gate, velocity and
     # start time are all set before the name fires the pitch into dict.pack.
